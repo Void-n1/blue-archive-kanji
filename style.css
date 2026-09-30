@@ -349,13 +349,15 @@ main {
 }
 
 .stage-badge {
-  background: #0F172A;
-  color: var(--neon-cyan);
-  padding: 6px 14px;
+  background: linear-gradient(135deg, #00A3FF, #0072FF);
+  color: #FFFFFF;
+  padding: 6px 16px;
   border-radius: 8px;
   font-size: 0.95rem;
+  font-weight: 900;
   letter-spacing: 2px;
-  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 3px 10px rgba(0, 163, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .combo-badge {
