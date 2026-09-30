@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ブルアカ漢字でGO! - ブルーアーカイブ難読漢字クイズ</title>
   <meta name="description" content="ブルーアーカイブ（ブルアカ）に登場する生徒の難読苗字や学校・組織名の読み仮名を当てるブラウザクイズゲーム！">
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
   <!-- 背景サイバー装飾 -->
@@ -36,26 +36,45 @@
         <div class="game-sub-title">BLUE ARCHIVE KANJI CHALLENGE</div>
       </div>
 
-      <!-- 難易度選択 -->
-      <div class="difficulty-selection">
-        <div class="section-label">MISSION SELECT / 難易度選択</div>
-        <div class="diff-grid">
-          <button class="diff-btn selected" data-diff="ALL">
-            <span class="name">ALL</span>
-            <span class="desc">全難易度ミックス (10問)</span>
+      <!-- カテゴリ選択 -->
+      <div class="selection-section">
+        <div class="section-label">CATEGORY SELECT / カテゴリ選択</div>
+        <div class="category-grid">
+          <button class="cat-btn selected" data-cat="ALL">
+            <span class="name">すべて</span>
+            <span class="desc">全カテゴリ混合</span>
           </button>
-          <button class="diff-btn" data-diff="EASY">
-            <span class="name">初級 (Lv.1-2)</span>
-            <span class="desc">有名生徒・学校名</span>
+          <button class="cat-btn" data-cat="生徒名">
+            <span class="name">生徒名</span>
+            <span class="desc">生徒の苗字・名前</span>
           </button>
-          <button class="diff-btn" data-diff="HARD">
-            <span class="name">中級 (Lv.3)</span>
-            <span class="desc">難読苗字・部活名</span>
+          <button class="cat-btn" data-cat="セリフ">
+            <span class="name">セリフ</span>
+            <span class="desc">作中名言・会話</span>
           </button>
-          <button class="diff-btn" data-diff="VERY_HARD">
-            <span class="name">上級 (Lv.4-5)</span>
-            <span class="desc">超難読・特殊漢字</span>
+          <button class="cat-btn" data-cat="ブルアカ用語">
+            <span class="name">ブルアカ用語</span>
+            <span class="desc">学校・部活・組織名</span>
           </button>
+          <button class="cat-btn" data-cat="特殊読み">
+            <span class="name">特殊読み</span>
+            <span class="desc">当て字・難読用語</span>
+          </button>
+          <button class="cat-btn" data-cat="その他">
+            <span class="name">その他</span>
+            <span class="desc">初期案・設定資料</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 出題数選択 -->
+      <div class="selection-section">
+        <div class="section-label">QUESTION COUNT / 出題数選択</div>
+        <div class="count-selector">
+          <button class="count-btn" data-count="5">5問</button>
+          <button class="count-btn selected" data-count="10">10問</button>
+          <button class="count-btn" data-count="20">20問</button>
+          <button class="count-btn" data-count="ALL">全問</button>
         </div>
       </div>
 
@@ -64,8 +83,7 @@
       </button>
 
       <p class="disclaimer-note">
-        ※本作は『ブルーアーカイブ』の非公式二次創作ファンメイドゲームです。<br>
-        問題データは <code>questions.csv</code> で自由に管理・追加できます。
+        ※本作は『ブルーアーカイブ』の非公式二次創作ファンメイドゲームです。
       </p>
     </div>
 
@@ -170,8 +188,8 @@
     </div>
   </main>
 
-  <script src="romaji.js?v=2"></script>
-  <script src="audio.js?v=2"></script>
-  <script src="game.js?v=2"></script>
+  <script src="romaji.js?v=3"></script>
+  <script src="audio.js?v=3"></script>
+  <script src="game.js?v=3"></script>
 </body>
 </html>

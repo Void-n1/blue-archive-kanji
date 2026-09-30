@@ -5,7 +5,8 @@
 class KanjiGoGame {
   constructor() {
     this.questions = [];
-    this.selectedDifficulty = "ALL";
+    this.selectedCategory = "ALL";
+    this.selectedCount = 10;
     this.currentQuestions = [];
     this.currentIndex = 0;
     this.score = 0;
@@ -112,13 +113,24 @@ class KanjiGoGame {
   }
 
   initEventListeners() {
-    // 難易度ボタン選択
-    document.querySelectorAll(".diff-btn").forEach(btn => {
+    // カテゴリボタン選択
+    document.querySelectorAll(".cat-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         window.soundManager.playClick();
-        document.querySelectorAll(".diff-btn").forEach(b => b.classList.remove("selected"));
+        document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("selected"));
         btn.classList.add("selected");
-        this.selectedDifficulty = btn.dataset.diff;
+        this.selectedCategory = btn.dataset.cat;
+      });
+    });
+
+    // 出題数ボタン選択
+    document.querySelectorAll(".count-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        window.soundManager.playClick();
+        document.querySelectorAll(".count-btn").forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        const countVal = btn.dataset.count;
+        this.selectedCount = countVal === "ALL" ? "ALL" : parseInt(countVal, 10);
       });
     });
 
@@ -185,20 +197,24 @@ class KanjiGoGame {
   }
 
   startGame() {
-    // 難易度フィルタ
+    // カテゴリフィルタ
     let pool = this.questions;
-    if (this.selectedDifficulty === "EASY") {
-      pool = this.questions.filter(q => q.difficulty <= 2);
-    } else if (this.selectedDifficulty === "HARD") {
-      pool = this.questions.filter(q => q.difficulty === 3);
-    } else if (this.selectedDifficulty === "VERY_HARD") {
-      pool = this.questions.filter(q => q.difficulty >= 4);
+    if (this.selectedCategory && this.selectedCategory !== "ALL") {
+      pool = this.questions.filter(q => q.category === this.selectedCategory);
     }
 
     if (pool.length === 0) pool = this.questions;
 
-    // シャッフルして最大10問抽出
-    this.currentQuestions = [...pool].sort(() => Math.random() - 0.5).slice(0, 10);
+    // シャッフル
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+
+    // 出題数の決定
+    let limit = shuffled.length;
+    if (this.selectedCount !== "ALL") {
+      limit = Math.min(this.selectedCount, shuffled.length);
+    }
+
+    this.currentQuestions = shuffled.slice(0, limit);
     this.currentIndex = 0;
     this.score = 0;
     this.combo = 0;
@@ -447,7 +463,8 @@ class KanjiGoGame {
   }
 
   shareResult() {
-    const text = `【ブルアカ漢字でGO!】\n難易度: ${this.selectedDifficulty}\nスコア: ${this.score.toLocaleString()} PT\n正解数: ${this.correctCount}/${this.currentQuestions.length} (最大コンボ: ${this.maxCombo})\n#ブルアカ #ブルーアーカイブ #ブルアカ漢字でGO`;
+    const catName = this.selectedCategory === "ALL" ? "全カテゴリ" : this.selectedCategory;
+    const text = `【ブルアカ漢字でGO!】\nカテゴリ: ${catName}\nスコア: ${this.score.toLocaleString()} PT\n正解数: ${this.correctCount}/${this.currentQuestions.length} (最大コンボ: ${this.maxCombo})\n#ブルアカ #ブルーアーカイブ #ブルアカ漢字でGO`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");
   }

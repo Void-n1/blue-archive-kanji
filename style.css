@@ -237,69 +237,105 @@ main {
 }
 
 .difficulty-selection {
+.selection-section {
   width: 100%;
-  margin: 20px 0;
+  margin: 10px 0 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .section-label {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 800;
   color: #64748b;
   letter-spacing: 2px;
   text-align: left;
 }
 
-.diff-grid {
+.category-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+  gap: 10px;
 }
 
-.diff-btn {
+.cat-btn {
   background: white;
   border: 2px solid #E2E8F0;
   border-radius: 12px;
-  padding: 14px 10px;
+  padding: 12px 6px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  position: relative;
-  overflow: hidden;
 }
 
-.diff-btn:hover {
+.cat-btn:hover {
   transform: translateY(-2px);
   border-color: var(--primary-blue);
-  box-shadow: 0 6px 18px rgba(0, 163, 255, 0.18);
+  box-shadow: 0 6px 16px rgba(0, 163, 255, 0.15);
 }
 
-.diff-btn.selected {
+.cat-btn.selected {
   border-color: var(--primary-blue);
   background: linear-gradient(180deg, #F0F9FF, #E0F2FE);
-  box-shadow: 0 0 0 2px var(--primary-blue), 0 8px 20px rgba(0, 163, 255, 0.25);
+  box-shadow: 0 0 0 2px var(--primary-blue), 0 6px 18px rgba(0, 163, 255, 0.25);
 }
 
-.diff-btn .name {
-  font-size: 1.05rem;
+.cat-btn .name {
+  font-size: 1rem;
   font-weight: 900;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
+  color: #0F172A;
 }
-.diff-btn .desc {
-  font-size: 0.72rem;
+
+.cat-btn .desc {
+  font-size: 0.68rem;
   color: #64748B;
   font-weight: 600;
 }
 
-.diff-btn[data-diff="ALL"] .name { color: #7C3AED; }
-.diff-btn[data-diff="EASY"] .name { color: #0284C7; }
-.diff-btn[data-diff="HARD"] .name { color: #D97706; }
-.diff-btn[data-diff="VERY_HARD"] .name { color: #DC2626; }
+.cat-btn[data-cat="ALL"] .name { color: #7C3AED; }
+.cat-btn[data-cat="生徒名"] .name { color: #0284C7; }
+.cat-btn[data-cat="セリフ"] .name { color: #059669; }
+.cat-btn[data-cat="ブルアカ用語"] .name { color: #D97706; }
+.cat-btn[data-cat="特殊読み"] .name { color: #DC2626; }
+.cat-btn[data-cat="その他"] .name { color: #475569; }
+
+/* 出題数セレクター */
+.count-selector {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.count-btn {
+  flex: 1;
+  background: white;
+  border: 2px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.count-btn:hover {
+  border-color: var(--primary-blue);
+  color: var(--primary-blue);
+  transform: translateY(-1px);
+}
+
+.count-btn.selected {
+  border-color: var(--primary-blue);
+  background: var(--primary-blue);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 163, 255, 0.35);
+}
 
 .start-btn {
   width: 100%;
