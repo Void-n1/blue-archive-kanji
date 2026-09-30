@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ブルアカ漢字でGO! - ブルーアーカイブ難読漢字クイズ</title>
+  <meta name="description" content="ブルーアーカイブ（ブルアカ）に登場する生徒の難読苗字や学校・組織名の読み仮名を当てるブラウザクイズゲーム！">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 背景サイバー装飾 -->
+  <div class="cyber-bg-ring"></div>
+
+  <!-- ヘッダー -->
+  <header>
+    <div class="schale-logo">
+      <span class="logo-badge">SCHALE</span>
+      <span class="app-title-text">KANJI de GO!</span>
+    </div>
+    <div class="header-controls">
+      <button id="btn-mute" class="icon-btn" title="ミュート切替">🔊</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ================= タイトル画面 ================= -->
+    <div id="screen-title" class="card-panel">
+      <div class="accent-stripe"></div>
+      
+      <div class="title-hero-wrap">
+        <div class="halo-icon">
+          <div class="halo-circle"></div>
+          <div class="halo-cross"></div>
+        </div>
+        <h1 class="game-main-title">ブルアカ漢字でGO!</h1>
+        <div class="game-sub-title">BLUE ARCHIVE KANJI CHALLENGE</div>
+      </div>
+
+      <!-- 難易度選択 -->
+      <div class="difficulty-selection">
+        <div class="section-label">MISSION SELECT / 難易度選択</div>
+        <div class="diff-grid">
+          <button class="diff-btn selected" data-diff="ALL">
+            <span class="name">ALL</span>
+            <span class="desc">全難易度ミックス (10問)</span>
+          </button>
+          <button class="diff-btn" data-diff="EASY">
+            <span class="name">初級 (Lv.1-2)</span>
+            <span class="desc">有名生徒・学校名</span>
+          </button>
+          <button class="diff-btn" data-diff="HARD">
+            <span class="name">中級 (Lv.3)</span>
+            <span class="desc">難読苗字・部活名</span>
+          </button>
+          <button class="diff-btn" data-diff="VERY_HARD">
+            <span class="name">上級 (Lv.4-5)</span>
+            <span class="desc">超難読・特殊漢字</span>
+          </button>
+        </div>
+      </div>
+
+      <button id="btn-start" class="start-btn">
+        <span>出撃開始 (START)</span>
+      </button>
+
+      <p class="disclaimer-note">
+        ※本作は『ブルーアーカイブ』の非公式二次創作ファンメイドゲームです。<br>
+        問題データは <code>questions.csv</code> で自由に管理・追加できます。
+      </p>
+    </div>
+
+    <!-- ================= ゲーム画面 ================= -->
+    <div id="screen-game" class="card-panel">
+      <div class="accent-stripe"></div>
+
+      <!-- ステージヘッダー -->
+      <div class="game-top-bar">
+        <span id="stage-text" class="stage-badge">MISSION 1/10</span>
+        <span id="combo-badge" class="combo-badge">COMBO x2!</span>
+        <span id="score-text" class="score-display">0 PT</span>
+      </div>
+
+      <!-- タイマーゲージ -->
+      <div class="timer-container">
+        <div id="timer-bar" class="timer-bar"></div>
+      </div>
+
+      <!-- 漢字出題エリア -->
+      <div id="kanji-box" class="kanji-box">
+        <!-- 上部メタ情報（カテゴリ、難易度、記載場所、発言者） -->
+        <div class="kanji-meta-container">
+          <div class="meta-row top">
+            <span id="meta-category" class="badge badge-category">生徒名(苗字)</span>
+            <span id="meta-difficulty" class="badge badge-diff">Lv.1 ★☆☆☆☆</span>
+          </div>
+          <div class="meta-row bottom">
+            <span id="meta-source" class="badge badge-source">📖 メインVol.1 1章1話</span>
+            <span id="meta-speaker" class="badge badge-speaker">💬 アロナ</span>
+          </div>
+        </div>
+
+        <!-- 漢字表示 -->
+        <div id="kanji-display" class="kanji-text">砂狼</div>
+
+        <!-- ヒント表示 -->
+        <div id="meta-hint" class="hint-banner">💡 シロコの苗字</div>
+
+        <!-- フィードバック演出 (EXCELLENT / MISS) -->
+        <div id="feedback-overlay" class="feedback-overlay">
+          <div id="feedback-text" class="feedback-banner">EXCELLENT!</div>
+        </div>
+      </div>
+
+      <!-- 入力エリア -->
+      <div class="input-wrap">
+        <div id="reading-preview" class="reading-preview"></div>
+        <input 
+          type="text" 
+          id="game-input" 
+          class="game-input-field" 
+          placeholder="読み仮名を入力（ローマ字・ひらがなOK）" 
+          autocomplete="off" 
+          autocorrect="off" 
+          autocapitalize="off" 
+          spellcheck="false"
+        >
+        <span class="input-instructions">※「sunaookami」などのローマ字、または「すなおおかみ」で自動判定</span>
+      </div>
+    </div>
+
+    <!-- ================= リザルト画面 ================= -->
+    <div id="screen-result" class="card-panel">
+      <div class="accent-stripe"></div>
+      
+      <div id="result-rank" class="result-badge clear">RANK: S</div>
+      
+      <div class="result-stats-card">
+        <div class="stat-item">
+          <span class="stat-label">TOTAL SCORE</span>
+          <span id="res-score" class="stat-value">12,500</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">CORRECT</span>
+          <span id="res-correct" class="stat-value">10 / 10</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">MAX COMBO</span>
+          <span id="res-combo" class="stat-value">10</span>
+        </div>
+      </div>
+
+      <!-- 出題の振り返り -->
+      <div class="review-list">
+        <div class="review-title">出題された問題と作中出典</div>
+        <div id="review-items"></div>
+      </div>
+
+      <div class="result-actions">
+        <button id="btn-retry" class="btn-action btn-retry">🔄 もう一度挑戦</button>
+        <button id="btn-share" class="btn-action btn-share">𝕏 結果をポスト</button>
+        <button id="btn-home" class="btn-action" style="background:#E2E8F0; color:#334155;">🏠 タイトルへ</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="romaji.js"></script>
+  <script src="audio.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
