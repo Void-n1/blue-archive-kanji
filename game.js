@@ -134,11 +134,22 @@ class KanjiGoGame {
       this.startGame();
     });
 
-    // タイトルへ戻る
+    // タイトルへ戻る (リザルト画面)
     document.getElementById("btn-home").addEventListener("click", () => {
       window.soundManager.playClick();
       this.showTitle();
     });
+
+    // タイトルへ戻る (プレイ中画面)
+    const btnGameHome = document.getElementById("btn-game-home");
+    if (btnGameHome) {
+      btnGameHome.addEventListener("click", () => {
+        window.soundManager.playClick();
+        if (confirm("タイトル画面に戻りますか？\n（現在の進行状況は破棄されます）")) {
+          this.showTitle();
+        }
+      });
+    }
 
     // X (Twitter) シェア
     document.getElementById("btn-share").addEventListener("click", () => {
