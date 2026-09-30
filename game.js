@@ -226,7 +226,7 @@ class KanjiGoGame {
 
     // 記載場所
     if (q.source) {
-      this.elSource.textContent = `📖 ${q.source}`;
+      this.elSource.textContent = q.source;
       this.elSource.style.display = "inline-flex";
     } else {
       this.elSource.style.display = "none";

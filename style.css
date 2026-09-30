@@ -155,20 +155,15 @@ main {
   overflow: hidden;
 }
 
-/* ブルアカ風斜めストライプバー */
+/* 上部アクセントバー（水色単色） */
 .accent-stripe {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 6px;
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--primary-blue),
-    var(--primary-blue) 12px,
-    var(--neon-cyan) 12px,
-    var(--neon-cyan) 24px
-  );
+  height: 5px;
+  background: var(--primary-blue);
+  box-shadow: 0 1px 6px rgba(0, 163, 255, 0.4);
 }
 
 /* ================== タイトル画面 ================== */
