@@ -87,23 +87,28 @@
 
       <!-- 漢字出題エリア -->
       <div id="kanji-box" class="kanji-box">
-        <!-- 上部メタ情報（カテゴリ、難易度、記載場所、発言者） -->
+        <!-- 上部メタ情報（カテゴリ、難易度、記載場所） -->
         <div class="kanji-meta-container">
           <div class="meta-row top">
             <span id="meta-category" class="badge badge-category">生徒名(苗字)</span>
             <span id="meta-difficulty" class="badge badge-diff">Lv.1 ★☆☆☆☆</span>
-          </div>
-          <div class="meta-row bottom">
             <span id="meta-source" class="badge badge-source">📖 メインVol.1 1章1話</span>
-            <span id="meta-speaker" class="badge badge-speaker">💬 アロナ</span>
           </div>
         </div>
 
         <!-- 漢字表示 -->
         <div id="kanji-display" class="kanji-text">砂狼</div>
 
-        <!-- ヒント表示 -->
-        <div id="meta-hint" class="hint-banner">💡 シロコの苗字</div>
+        <!-- セリフ・問題文表示エリア -->
+        <div id="dialogue-box" class="dialogue-box">
+          <div id="dialogue-speaker-tag" class="dialogue-speaker-tag">
+            <span class="speaker-icon">💬</span>
+            <span id="dialogue-speaker">アロナ</span>
+          </div>
+          <div id="dialogue-text" class="dialogue-text">
+            「砂狼シロコさん、今日も朝早くからジョギングをしていたみたいです！」
+          </div>
+        </div>
 
         <!-- フィードバック演出 (EXCELLENT / MISS) -->
         <div id="feedback-overlay" class="feedback-overlay">
