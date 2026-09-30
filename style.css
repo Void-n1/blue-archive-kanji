@@ -236,7 +236,6 @@ main {
   border-radius: 20px;
 }
 
-.difficulty-selection {
 .selection-section {
   width: 100%;
   margin: 10px 0 16px;
@@ -255,8 +254,9 @@ main {
 
 .category-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+  width: 100%;
 }
 
 .cat-btn {
@@ -876,8 +876,13 @@ main {
   .card-panel {
     padding: 24px 16px;
   }
-  .diff-grid {
+  .category-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .count-selector {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
   .meta-row.top, .meta-row.bottom {
     flex-wrap: wrap;
