@@ -28,7 +28,10 @@ class KanjiGoGame {
     this.elSource = document.getElementById("meta-source");
     this.elSpeaker = document.getElementById("meta-speaker");
     this.elDifficulty = document.getElementById("meta-difficulty");
-    this.elHint = document.getElementById("meta-hint");
+    this.elDialogueBox = document.getElementById("dialogue-box");
+    this.elDialogueSpeaker = document.getElementById("dialogue-speaker");
+    this.elDialogueSpeakerTag = document.getElementById("dialogue-speaker-tag");
+    this.elDialogueText = document.getElementById("dialogue-text");
     this.elStage = document.getElementById("stage-text");
     this.elScore = document.getElementById("score-text");
     this.elCombo = document.getElementById("combo-badge");
@@ -46,7 +49,11 @@ class KanjiGoGame {
   // CSVパース (RFC4180風のクォート対応)
   async loadCSV() {
     try {
-      const res = await fetch("questions.csv?t=" + Date.now());
+      // question.csv を優先し、なければ questions.csv を取得
+      let res = await fetch("question.csv?t=" + Date.now());
+      if (!res.ok) {
+        res = await fetch("questions.csv?t=" + Date.now());
+      }
       if (!res.ok) throw new Error("CSV fetch failed");
       const text = await res.text();
       this.questions = this.parseCSV(text);
@@ -83,7 +90,7 @@ class KanjiGoGame {
       }
       cols.push(buffer.trim());
 
-      // id,kanji,ruby,difficulty,category,source,speaker,hint
+      // id,kanji,ruby,difficulty,category,source,speaker,sentence/hint
       if (cols.length >= 3) {
         const rawRuby = cols[2].replace(/^["']|["']$/g, "");
         // パイプ | またはスラッシュ / またはセミコロン ; または カンマ で分割
@@ -97,7 +104,7 @@ class KanjiGoGame {
           category: cols[4] || "一般",
           source: cols[5] || "",
           speaker: cols[6] || "",
-          hint: cols[7] || ""
+          sentence: cols[7] || ""
         });
       }
     }
@@ -225,20 +232,24 @@ class KanjiGoGame {
       this.elSource.style.display = "none";
     }
 
-    // 誰の発言
-    if (q.speaker) {
-      this.elSpeaker.textContent = `💬 ${q.speaker}`;
-      this.elSpeaker.style.display = "inline-flex";
-    } else {
-      this.elSpeaker.style.display = "none";
-    }
+    // セリフ・問題文の表示
+    if (q.sentence) {
+      if (q.speaker) {
+        this.elDialogueSpeaker.textContent = q.speaker;
+        this.elDialogueSpeakerTag.style.display = "inline-flex";
+      } else {
+        this.elDialogueSpeakerTag.style.display = "none";
+      }
 
-    // ヒント
-    if (q.hint) {
-      this.elHint.textContent = `💡 ${q.hint}`;
-      this.elHint.style.display = "inline-flex";
+      // セリフ内の対象漢字をハイライト表示
+      let formattedText = q.sentence;
+      if (q.kanji && formattedText.includes(q.kanji)) {
+        formattedText = formattedText.replaceAll(q.kanji, `<span class="kanji-highlight">${q.kanji}</span>`);
+      }
+      this.elDialogueText.innerHTML = `「${formattedText}」`;
+      this.elDialogueBox.style.display = "block";
     } else {
-      this.elHint.style.display = "none";
+      this.elDialogueBox.style.display = "none";
     }
 
     this.elInput.value = "";
@@ -322,6 +333,12 @@ class KanjiGoGame {
       setTimeout(() => {
         this.nextQuestion();
       }, 700);
+    } else if (isEnter && inputHiragana.trim().length > 0) {
+      // Enterキーで誤答だった場合の揺れアニメーション
+      this.elInput.classList.remove("input-miss");
+      void this.elInput.offsetWidth; // リフロー発生でアニメーション再発火
+      this.elInput.classList.add("input-miss");
+      window.soundManager.playTick();
     }
   }
 
@@ -389,7 +406,7 @@ class KanjiGoGame {
     document.getElementById("res-correct").textContent = `${this.correctCount} / ${total}`;
     document.getElementById("res-combo").textContent = this.maxCombo;
 
-    // 振り返りリスト生成 (記載場所や話者も表示)
+    // 振り返りリスト生成 (記載場所や話者、セリフも表示)
     const reviewList = document.getElementById("review-items");
     reviewList.innerHTML = "";
     this.history.forEach(item => {
@@ -401,6 +418,7 @@ class KanjiGoGame {
           <span class="review-mark">${item.isCorrect ? "⭕" : "❌"}</span>
           <span class="review-kanji"><strong>${item.kanji}</strong>（${item.rubies.join(" / ")}）</span>
           ${metaInfo ? `<span class="review-source">${metaInfo}</span>` : ""}
+          ${item.sentence ? `<div class="review-sentence" style="font-size:0.8rem; color:#64748b; margin-top:3px; line-height:1.4;">「${item.sentence}」</div>` : ""}
         </div>
         <div class="review-right" style="color: ${item.isCorrect ? '#0284c7' : '#ef4444'}">
           ${item.user || "-"}

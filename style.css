@@ -488,17 +488,6 @@ main {
   color: #BE185D;
 }
 
-.hint-banner {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #475569;
-  background: #F1F5F9;
-  padding: 4px 14px;
-  border-radius: 14px;
-  margin-top: 8px;
-  max-width: 90%;
-}
-
 .kanji-text {
   font-family: 'Noto Sans JP', sans-serif;
   font-size: 4.8rem;
@@ -506,8 +495,69 @@ main {
   letter-spacing: 8px;
   color: #0B192C;
   line-height: 1.15;
-  margin: 30px 0 10px;
+  margin: 32px 0 14px;
   text-shadow: 0 3px 6px rgba(0,0,0,0.08);
+}
+
+/* ブルアカ風セリフ・問題文ダイアログ */
+.dialogue-box {
+  width: 100%;
+  max-width: 660px;
+  background: rgba(240, 249, 255, 0.95);
+  border: 1.5px solid rgba(0, 163, 255, 0.35);
+  border-radius: 12px;
+  padding: 14px 18px 12px;
+  margin-top: 4px;
+  position: relative;
+  box-shadow: 0 4px 16px rgba(0, 163, 255, 0.08);
+  text-align: left;
+}
+
+.dialogue-speaker-tag {
+  position: absolute;
+  top: -12px;
+  left: 14px;
+  background: linear-gradient(135deg, #0284c7, #00A3FF);
+  color: #FFFFFF;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 163, 255, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 1px;
+}
+
+.dialogue-text {
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: #1E293B;
+  line-height: 1.6;
+  letter-spacing: 0.5px;
+}
+
+.dialogue-text .kanji-highlight {
+  color: #0077FF;
+  background: rgba(0, 240, 255, 0.2);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border-bottom: 2px solid #00A3FF;
+  font-weight: 900;
+}
+
+/* 入力エラー時のアニメーション */
+.input-miss {
+  animation: inputMissShake 0.25s ease-in-out;
+  border-color: #EF4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3) !important;
+}
+
+@keyframes inputMissShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
 }
 
 /* 入力エリア */
