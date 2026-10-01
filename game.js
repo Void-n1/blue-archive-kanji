@@ -1,6 +1,63 @@
 /**
- * ブルアカ漢字でGO! - ゲームエンジン (新CSVフォーマット対応版)
+ * ブルアカ漢字クイズ - ゲームエンジン
  */
+
+// =============================================================================
+// 🏆 リザルト・ランク判定の設定（必要に応じて自由に編集・調整できます）
+// =============================================================================
+// 条件の変更や秒数（2.5秒、5.0秒など）の調整はここを編集してください。
+const RANK_SETTINGS = {
+  // プラチナ: パーフェクト（ミス0） かつ 平均回答速度が2.5秒以下
+  PLATINUM: {
+    label: "RANK: プラチナ",
+    badgeClass: "rank-platinum",
+    description: "全問正解 & 神速回答！",
+    // 判定条件 (total:総問題数, correct:正解数, avgTime:平均秒数)
+    isMatch: (total, correct, avgTime) => (correct === total && total > 0 && avgTime <= 2.5)
+  },
+
+  // ゴールド: パーフェクト（ミス0）
+  GOLD: {
+    label: "RANK: ゴールド",
+    badgeClass: "rank-gold",
+    description: "全問正解パーフェクト！",
+    // 判定条件
+    isMatch: (total, correct, avgTime) => (correct === total && total > 0 && avgTime <= 3.5)
+  },
+
+  // シルバー: 1問以上ミスあり かつ 平均回答速度が5.0秒以下
+  SILVER: {
+    label: "RANK: シルバー",
+    badgeClass: "rank-silver",
+    description: "高速クリア！",
+    // 判定条件 (1問以上ミス かつ 平均5秒以下)
+    isMatch: (total, correct, avgTime) => (correct < total && avgTime <= 5.0)
+  },
+
+  // ブロンズ: 上記以外（ミスあり、かつ平均回答速度が5.0秒超など）
+  BRONZE: {
+    label: "RANK: ブロンズ",
+    badgeClass: "rank-bronze",
+    description: "クリア！",
+    // 判定条件 (フォールバック)
+    isMatch: () => true
+  }
+};
+
+/**
+ * リザルトのランク判定関数
+ * 判定優先度順（PLATINUM → GOLD → SILVER → BRONZE）に条件をチェックして返します。
+ */
+function evaluateGameRank(total, correct, avgTime) {
+  const rankOrder = ["PLATINUM", "GOLD", "SILVER", "BRONZE"];
+  for (const key of rankOrder) {
+    const config = RANK_SETTINGS[key];
+    if (config && config.isMatch(total, correct, avgTime)) {
+      return config;
+    }
+  }
+  return RANK_SETTINGS.BRONZE;
+}
 
 class KanjiGoGame {
   constructor() {
@@ -19,11 +76,14 @@ class KanjiGoGame {
     this.timeLimitMs = 12000; // 1問12秒 (ヒントや出典も読めるように少し余裕を確保)
     this.remainingMs = 0;
     this.isAnswering = false;
+    this.isPaused = false;
+    this.pauseStartTime = 0;
 
     // DOM要素
     this.elTitle = document.getElementById("screen-title");
     this.elGame = document.getElementById("screen-game");
     this.elResult = document.getElementById("screen-result");
+    this.elModalConfirm = document.getElementById("modal-confirm");
     this.elKanji = document.getElementById("kanji-display");
     this.elCategory = document.getElementById("meta-category");
     this.elSource = document.getElementById("meta-source");
@@ -45,22 +105,42 @@ class KanjiGoGame {
 
     this.initEventListeners();
     this.loadCSV();
+    this.loadInfoTxtFiles();
   }
 
   // CSVパース (RFC4180風のクォート対応)
   async loadCSV() {
     try {
-      // question.csv を優先し、なければ questions.csv を取得
-      let res = await fetch("question.csv?t=" + Date.now());
-      if (!res.ok) {
-        res = await fetch("questions.csv?t=" + Date.now());
-      }
+      const res = await fetch("questions.csv?t=" + Date.now());
       if (!res.ok) throw new Error("CSV fetch failed");
       const text = await res.text();
       this.questions = this.parseCSV(text);
       console.log(`Loaded ${this.questions.length} questions from CSV.`);
     } catch (e) {
       console.error("CSV読み込み失敗:", e);
+    }
+  }
+
+  // 外部テキストファイル（UPDATES.txt, README.txt, CREDITS.txt）の動的読み込み
+  async loadInfoTxtFiles() {
+    const files = [
+      { id: "txt-content-updates", path: "UPDATES.txt" },
+      { id: "txt-content-readme", path: "README.txt" },
+      { id: "txt-content-credits", path: "CREDITS.txt" }
+    ];
+
+    for (const item of files) {
+      const el = document.getElementById(item.id);
+      if (!el) continue;
+      try {
+        const res = await fetch(`${item.path}?t=${Date.now()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        el.textContent = text.trim();
+      } catch (e) {
+        console.warn(`${item.path} 読み込み失敗:`, e);
+        el.textContent = "※ 情報の読み込みに失敗しました。";
+      }
     }
   }
 
@@ -152,16 +232,87 @@ class KanjiGoGame {
       this.showTitle();
     });
 
-    // タイトルへ戻る (プレイ中画面)
+    // タイトルへ戻る (プレイ中画面: 確認画面を開く ※タイマーは止めない)
     const btnGameHome = document.getElementById("btn-game-home");
     if (btnGameHome) {
       btnGameHome.addEventListener("click", () => {
         window.soundManager.playClick();
-        if (confirm("タイトル画面に戻りますか？\n（現在の進行状況は破棄されます）")) {
-          this.showTitle();
-        }
+        this.openHomeConfirmModal();
       });
     }
+
+    // モーダル: 続けるボタン
+    const modalBtnCancel = document.getElementById("modal-btn-cancel");
+    if (modalBtnCancel) {
+      modalBtnCancel.addEventListener("click", () => {
+        window.soundManager.playClick();
+        this.closeHomeConfirmModal();
+      });
+    }
+
+    // モーダル: タイトルへ戻るボタン
+    const modalBtnConfirm = document.getElementById("modal-btn-confirm");
+    if (modalBtnConfirm) {
+      modalBtnConfirm.addEventListener("click", () => {
+        window.soundManager.playClick();
+        this.closeHomeConfirmModal();
+        this.showTitle();
+      });
+    }
+
+    // インフォモーダル開閉 (README / アップデート / クレジット)
+    const modalInfo = document.getElementById("modal-info");
+    const btnOpenInfo = document.getElementById("btn-open-info");
+    const btnCloseInfo = document.getElementById("btn-close-info");
+    const btnCloseInfoBottom = document.getElementById("btn-close-info-bottom");
+
+    const openInfoModal = () => {
+      window.soundManager.playClick();
+      this.loadInfoTxtFiles(); // モーダルを開くたびに最新のtxtファイルを取得
+      if (modalInfo) modalInfo.style.display = "flex";
+    };
+    const closeInfoModal = () => {
+      window.soundManager.playClick();
+      if (modalInfo) modalInfo.style.display = "none";
+    };
+
+    if (btnOpenInfo) btnOpenInfo.addEventListener("click", openInfoModal);
+    if (btnCloseInfo) btnCloseInfo.addEventListener("click", closeInfoModal);
+    if (btnCloseInfoBottom) btnCloseInfoBottom.addEventListener("click", closeInfoModal);
+
+    if (modalInfo) {
+      modalInfo.addEventListener("click", (e) => {
+        if (e.target === modalInfo) closeInfoModal();
+      });
+    }
+
+    // タブ切り替え
+    const tabs = document.querySelectorAll(".schale-tab");
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        window.soundManager.playClick();
+        tabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+
+        const targetId = tab.dataset.tab;
+        document.querySelectorAll(".info-tab-pane").forEach(pane => {
+          pane.classList.remove("active");
+        });
+        const targetPane = document.getElementById(targetId);
+        if (targetPane) targetPane.classList.add("active");
+      });
+    });
+
+    // ESCキーでモーダルを閉じる
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        if (modalInfo && modalInfo.style.display === "flex") {
+          closeInfoModal();
+        } else if (this.elModalConfirm && this.elModalConfirm.style.display === "flex") {
+          this.closeHomeConfirmModal();
+        }
+      }
+    });
 
     // X (Twitter) シェア
     document.getElementById("btn-share").addEventListener("click", () => {
@@ -177,7 +328,7 @@ class KanjiGoGame {
 
     // 入力監視 (リアルタイムひらがな変換 & 判定)
     this.elInput.addEventListener("input", (e) => {
-      if (!this.isAnswering) return;
+      if (!this.isAnswering || this.isPaused) return;
       const raw = e.target.value;
       const converted = window.RomajiUtil.convertToHiragana(raw);
       this.elReadingPreview.textContent = converted;
@@ -188,7 +339,7 @@ class KanjiGoGame {
 
     // Enterキーでも判定
     this.elInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && this.isAnswering) {
+      if (e.key === "Enter" && this.isAnswering && !this.isPaused) {
         const raw = this.elInput.value;
         const converted = window.RomajiUtil.convertToHiragana(raw);
         this.checkAnswer(converted, true);
@@ -221,6 +372,9 @@ class KanjiGoGame {
     this.maxCombo = 0;
     this.correctCount = 0;
     this.history = [];
+    this.isPaused = false;
+    this.pauseStartTime = 0;
+    this.closeHomeConfirmModal(false);
 
     this.elTitle.style.display = "none";
     this.elResult.style.display = "none";
@@ -318,6 +472,26 @@ class KanjiGoGame {
     }, interval);
   }
 
+  // タイトルへ戻る確認モーダルを開く (★タイマーは一切止めず通常進行！背景完全目隠しでカンニングを完全防止)
+  // タイトルへ戻る確認モーダルを開く (タイマーは止めず、背景の問題も見えたまま進行)
+  openHomeConfirmModal() {
+    if (!this.isAnswering) return;
+
+    if (this.elModalConfirm) {
+      this.elModalConfirm.style.display = "flex";
+    }
+
+    // タイマーは止めずにそのまま進行（時間切れなら自動でMISS処理へ）
+  }
+
+  // タイトルへ戻る確認モーダルを閉じる
+  closeHomeConfirmModal() {
+    if (this.elModalConfirm) {
+      this.elModalConfirm.style.display = "none";
+    }
+    this.elInput.focus();
+  }
+
   checkAnswer(inputHiragana, isEnter = false) {
     if (!this.isAnswering) return;
     const q = this.currentQuestions[this.currentIndex - 1];
@@ -339,7 +513,7 @@ class KanjiGoGame {
       const pts = basePts + timeBonus + comboBonus;
       this.score += pts;
 
-      const elapsedSec = ((Date.now() - this.questionStartTime) / 1000).toFixed(1);
+      const elapsedSec = ((Date.now() - this.questionStartTime) / 1000).toFixed(3);
 
       this.history.push({
         kanji: q.kanji,
@@ -377,13 +551,14 @@ class KanjiGoGame {
   }
 
   timeUp() {
+    this.closeHomeConfirmModal(); // モーダルが開いていても時間切れで自動クローズ
     this.isAnswering = false;
     this.combo = 0;
     this.elCombo.classList.remove("active");
     window.soundManager.playWrong();
 
     const q = this.currentQuestions[this.currentIndex - 1];
-    const elapsedSec = (this.timeLimitMs / 1000).toFixed(1);
+    const elapsedSec = (this.timeLimitMs / 1000).toFixed(3);
     this.history.push({
       kanji: q.kanji,
       rubies: q.rubies,
@@ -422,25 +597,23 @@ class KanjiGoGame {
 
     // リザルト集計
     const total = this.currentQuestions.length;
-    const rate = Math.round((this.correctCount / total) * 100);
+    const totalTimeSec = this.history.reduce((sum, item) => sum + parseFloat(item.timeSec || 0), 0);
+    const avgTimeSec = total > 0 ? (totalTimeSec / total) : 0;
+    const avgTimeStr = avgTimeSec.toFixed(3);
+
+    // ランク判定（RANK_SETTINGS に基づいて判定）
+    const rankInfo = evaluateGameRank(total, this.correctCount, avgTimeSec);
+    this.currentRank = rankInfo;
+    this.lastAvgTimeStr = avgTimeStr;
 
     const elBadge = document.getElementById("result-rank");
-    if (rate === 100) {
-      elBadge.textContent = "RANK: S (PERFECT!)";
-      elBadge.className = "result-badge clear";
-    } else if (rate >= 70) {
-      elBadge.textContent = "RANK: A (CLEAR!)";
-      elBadge.className = "result-badge clear";
-    } else if (rate >= 40) {
-      elBadge.textContent = "RANK: B";
-      elBadge.className = "result-badge clear";
-    } else {
-      elBadge.textContent = "RANK: C (FAILED)";
-      elBadge.className = "result-badge failed";
-    }
+    elBadge.textContent = rankInfo.label;
+    elBadge.className = `result-badge ${rankInfo.badgeClass}`;
 
     document.getElementById("res-score").textContent = this.score.toLocaleString();
     document.getElementById("res-correct").textContent = `${this.correctCount} / ${total}`;
+    const elAvgTime = document.getElementById("res-avg-time");
+    if (elAvgTime) elAvgTime.textContent = `${avgTimeStr}s`;
     document.getElementById("res-combo").textContent = this.maxCombo;
 
     // 振り返りリスト生成 (記載場所や話者、セリフも表示)
@@ -452,16 +625,18 @@ class KanjiGoGame {
       const metaInfo = [item.source, item.speaker ? `(${item.speaker})` : ""].filter(Boolean).join(" ");
       div.innerHTML = `
         <div class="review-left">
-          <span class="review-mark">${item.isCorrect ? "⭕" : "❌"}</span>
-          <span class="review-kanji"><strong>${item.kanji}</strong>（${item.rubies.join(" / ")}）</span>
-          ${metaInfo ? `<span class="review-source">${metaInfo}</span>` : ""}
-          ${item.sentence ? `<div class="review-sentence" style="font-size:0.8rem; color:#64748b; margin-top:3px; line-height:1.4;">「${item.sentence}」</div>` : ""}
+          <div class="review-q-header">
+            <span class="review-mark">${item.isCorrect ? "⭕" : "❌"}</span>
+            <span class="review-kanji"><strong>${item.kanji}</strong>（${item.rubies.join(" / ")}）</span>
+            ${metaInfo ? `<span class="review-source">${metaInfo}</span>` : ""}
+          </div>
+          ${item.sentence ? `<div class="review-sentence">「${item.sentence}」</div>` : ""}
         </div>
         <div class="review-right">
           <span class="review-user-ans" style="color: ${item.isCorrect ? '#0284c7' : '#ef4444'}">
             ${item.user || "-"}
           </span>
-          <span class="review-time">⏱️ ${item.timeSec}s</span>
+          <span class="review-time">${item.timeSec}s</span>
         </div>
       `;
       reviewList.appendChild(div);
@@ -470,6 +645,8 @@ class KanjiGoGame {
 
   showTitle() {
     clearInterval(this.timer);
+    this.closeHomeConfirmModal();
+
     this.elGame.style.display = "none";
     this.elResult.style.display = "none";
     this.elTitle.style.display = "flex";
@@ -477,7 +654,9 @@ class KanjiGoGame {
 
   shareResult() {
     const catName = this.selectedCategory === "ALL" ? "全カテゴリ" : this.selectedCategory;
-    const text = `【ブルアカ漢字でGO!】\nカテゴリ: ${catName}\nスコア: ${this.score.toLocaleString()} PT\n正解数: ${this.correctCount}/${this.currentQuestions.length} (最大コンボ: ${this.maxCombo})\n#ブルアカ #ブルーアーカイブ #ブルアカ漢字でGO`;
+    const rankText = this.currentRank ? this.currentRank.label : "";
+    const avgText = this.lastAvgTimeStr ? ` (平均: ${this.lastAvgTimeStr}s)` : "";
+    const text = `【ブルアカ漢字検定】\n${rankText}\nカテゴリ: ${catName}\nスコア: ${this.score.toLocaleString()} PT\n正解数: ${this.correctCount}/${this.currentQuestions.length}${avgText}\n#ブルアカ #ブルーアーカイブ #ブルアカ漢字検定`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");
   }

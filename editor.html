@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>問題エディター - ブルアカ漢字でGO!</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&family=Outfit:wght@600;800;900&display=swap">
+  <style>
+    :root {
+      --primary: #00A3FF;
+      --primary-dark: #0072FF;
+      --neon-cyan: #00F0FF;
+      --bg: #F0F6FA;
+      --card-bg: rgba(255, 255, 255, 0.96);
+      --text: #1E293B;
+      --text-muted: #64748B;
+      --border: #CBD5E1;
+      --accent-pink: #FF4081;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      background-image: 
+        linear-gradient(rgba(0, 163, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 163, 255, 0.05) 1px, transparent 1px);
+      background-size: 24px 24px;
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1000px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ヘッダー */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 16px 24px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 14px rgba(0, 163, 255, 0.08);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge-schale {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-weight: 900;
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      transform: skewX(-8deg);
+    }
+
+    .header-title {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: #0F172A;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.88rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 163, 255, 0.3);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 163, 255, 0.4);
+    }
+
+    .btn-secondary {
+      background: white;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-secondary:hover {
+      background: #F8FAFC;
+      border-color: var(--primary);
+    }
+
+    /* メイングリッド (フォーム + プレビュー) */
+    .editor-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 20px;
+    }
+    @media (max-width: 860px) {
+      .editor-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+      position: relative;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: #0F172A;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 18px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    /* フォーム要素 */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group label .required {
+      color: #EF4444;
+      margin-left: 4px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .input-text, .select-box, textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: inherit;
+      color: #0F172A;
+      background: white;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .input-text:focus, .select-box:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 163, 255, 0.2);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .help-note {
+      font-size: 0.75rem;
+      color: #94A3B8;
+      margin-top: 4px;
+    }
+
+    /* 難易度スターセレクター */
+    .diff-stars {
+      display: flex;
+      gap: 8px;
+    }
+
+    .diff-star-btn {
+      flex: 1;
+      padding: 8px 4px;
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .diff-star-btn.selected {
+      background: #FEF3C7;
+      border-color: #F59E0B;
+      color: #B45309;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
+    }
+
+    /* リアルタイムプレビューカード */
+    .preview-box {
+      background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+      border: 2px solid #E2E8F0;
+      border-radius: 14px;
+      padding: 24px 16px 20px;
+      text-align: center;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 4px 15px rgba(0, 163, 255, 0.08);
+      min-height: 240px;
+      justify-content: center;
+    }
+
+    .preview-badge-row {
+      position: absolute;
+      top: 10px;
+      width: calc(100% - 24px);
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+
+    .badge-cat {
+      background: #E0F2FE;
+      color: #0369A1;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .badge-diff {
+      background: #FEF3C7;
+      color: #B45309;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .badge-source {
+      background: #F3E8FF;
+      color: #7E22CE;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      margin-top: 6px;
+    }
+
+    .preview-kanji {
+      font-size: 3.6rem;
+      font-weight: 900;
+      color: #0F172A;
+      margin: 18px 0 10px;
+      letter-spacing: 4px;
+      line-height: 1.1;
+    }
+
+    .preview-rubies {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+
+    /* ブルアカ風ダイアログ */
+    .preview-dialogue {
+      width: 100%;
+      background: rgba(240, 249, 255, 0.95);
+      border: 1.5px solid rgba(0, 163, 255, 0.35);
+      border-radius: 10px;
+      padding: 12px 14px;
+      position: relative;
+      text-align: left;
+      margin-top: 6px;
+    }
+
+    .preview-speaker-tag {
+      position: absolute;
+      top: -10px;
+      left: 10px;
+      background: linear-gradient(135deg, #0284c7, #00A3FF);
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 1px;
+    }
+
+    .preview-sentence {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #1E293B;
+      line-height: 1.5;
+    }
+
+    .preview-sentence .kanji-highlight {
+      color: #0077FF;
+      background: rgba(0, 240, 255, 0.25);
+      padding: 1px 4px;
+      border-radius: 3px;
+      border-bottom: 2px solid #00A3FF;
+      font-weight: 900;
+    }
+
+    /* 問題一覧リスト */
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .search-input {
+      max-width: 260px;
+    }
+
+    .table-wrap {
+      max-height: 440px;
+      overflow-y: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.86rem;
+    }
+
+    th {
+      background: #F8FAFC;
+      padding: 10px 12px;
+      font-weight: 800;
+      color: var(--text-muted);
+      border-bottom: 1.5px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #E2E8F0;
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background: #F0F9FF;
+    }
+
+    .action-btn-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-mini {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: white;
+    }
+    .btn-mini:hover {
+      background: #F1F5F9;
+      border-color: var(--primary);
+    }
+    .btn-delete:hover {
+      background: #FEE2E2;
+      border-color: #EF4444;
+      color: #DC2626;
+    }
+
+    /* 通知トースト */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0F172A;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.25s ease;
+      pointer-events: none;
+      z-index: 100;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- ヘッダー -->
+    <header>
+      <div class="brand">
+        <span class="badge-schale">SCHALE</span>
+        <h1 class="header-title">ブルアカ漢字でGO! 問題エディター</h1>
+      </div>
+      <div class="header-actions">
+        <label for="csv-upload" class="btn btn-secondary">
+          📂 CSVをインポート
+          <input type="file" id="csv-upload" accept=".csv" style="display:none">
+        </label>
+        <button id="btn-export-csv" class="btn btn-primary">
+          💾 CSVを保存・ダウンロード
+        </button>
+      </div>
+    </header>
+
+    <!-- エディターグリッド -->
+    <div class="editor-grid">
+      <!-- 入力フォーム -->
+      <div class="card">
+        <h2 id="form-mode-title" class="card-title">新しい問題を追加</h2>
+
+        <form id="question-form">
+          <input type="hidden" id="edit-id" value="">
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>問題の漢字<span class="required">*</span></label>
+              <input type="text" id="input-kanji" class="input-text" placeholder="例: 砂狼" required>
+            </div>
+            <div class="form-group">
+              <label>よみ (複数回答は / で区切る)<span class="required">*</span></label>
+              <input type="text" id="input-ruby" class="input-text" placeholder="例: すなおおかみ/すなおかみ" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>カテゴリ</label>
+              <select id="input-category" class="select-box">
+                <option value="生徒名">生徒名</option>
+                <option value="セリフ">セリフ</option>
+                <option value="ブルアカ用語">ブルアカ用語</option>
+                <option value="特殊読み">特殊読み</option>
+                <option value="その他">その他</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>難易度 (Lv.1 〜 Lv.5)</label>
+              <div class="diff-stars">
+                <button type="button" class="diff-star-btn selected" data-lv="1">★1</button>
+                <button type="button" class="diff-star-btn" data-lv="2">★2</button>
+                <button type="button" class="diff-star-btn" data-lv="3">★3</button>
+                <button type="button" class="diff-star-btn" data-lv="4">★4</button>
+                <button type="button" class="diff-star-btn" data-lv="5">★5</button>
+              </div>
+              <input type="hidden" id="input-diff" value="1">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>出典 / 記載場所</label>
+              <input type="text" id="input-source" class="input-text" placeholder="例: メインVol.1 1章1話">
+            </div>
+            <div class="form-group">
+              <label>話者 (キャラクター名)</label>
+              <input type="text" id="input-speaker" class="input-text" placeholder="例: アロナ">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>セリフ・問題文 (漢字を含む文章)<span class="required">*</span></label>
+            <textarea id="input-sentence" class="input-text" placeholder="例: 砂狼シロコさん、今日も朝早くからジョギングをしていたみたいです！" required></textarea>
+            <div class="help-note">※セリフ内の出題漢字は、出題時に自動的にハイライト表示されます。</div>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:16px;">
+            <button type="submit" id="btn-submit" class="btn btn-primary" style="flex:1; justify-content:center;">
+              ➕ この問題を追加する
+            </button>
+            <button type="button" id="btn-cancel-edit" class="btn btn-secondary" style="display:none;">
+              キャンセル
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- リアルタイムプレビュー -->
+      <div class="card">
+        <h2 class="card-title">ゲーム出題プレビュー</h2>
+        <div class="preview-box">
+          <div class="preview-badge-row">
+            <span id="prev-cat" class="badge-cat">生徒名</span>
+            <span id="prev-diff" class="badge-diff">Lv.1 ★☆☆☆☆</span>
+          </div>
+
+          <div id="prev-kanji" class="preview-kanji">砂狼</div>
+          <div id="prev-rubies" class="preview-rubies">すなおおかみ / すなおかみ</div>
+          <div id="prev-source" class="badge-source">メインVol.1 1章1話</div>
+
+          <div class="preview-dialogue">
+            <div id="prev-speaker" class="preview-speaker-tag">アロナ</div>
+            <div id="prev-sentence" class="preview-sentence">
+              「<span class="kanji-highlight">砂狼</span>シロコさん、今日も朝早くからジョギングをしていたみたいです！」
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 登録済み問題一覧 -->
+    <div class="card">
+      <div class="list-header">
+        <h2 class="card-title" style="margin-bottom:0;">
+          登録問題一覧 (<span id="total-count">0</span>問)
+        </h2>
+        <input type="text" id="search-box" class="input-text search-input" placeholder="🔍 漢字、読み、話者で検索...">
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px;">ID</th>
+              <th style="width:110px;">漢字</th>
+              <th style="width:140px;">よみ</th>
+              <th style="width:65px;">難易度</th>
+              <th style="width:100px;">話者</th>
+              <th>セリフ・問題文</th>
+              <th style="width:120px;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="question-table-body">
+            <!-- 動的挿入 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">CSVを保存しました！</div>
+
+  <script>
+    // 問題データリスト
+    let questions = [];
+    let selectedDiff = 1;
+
+    // 初期化
+    document.addEventListener("DOMContentLoaded", () => {
+      loadInitialCSV();
+      setupEvents();
+    });
+
+    // 既存CSV自動読み込み
+    async function loadInitialCSV() {
+      try {
+        let res = await fetch("questions.csv?t=" + Date.now());
+        if (!res.ok) res = await fetch("questions.csv?t=" + Date.now());
+        if (res.ok) {
+          const text = await res.text();
+          questions = parseCSV(text);
+          renderTable();
+          updatePreview();
+        }
+      } catch (e) {
+        console.log("初期CSV読み込みスキップ:", e);
+      }
+    }
+
+    // CSVパース (RFC4180風)
+    function parseCSV(text) {
+      const lines = text.trim().split(/\r?\n/);
+      if (lines.length <= 1) return [];
+
+      const list = [];
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const cols = [];
+        let inQuote = false;
+        let buffer = "";
+        for (let c = 0; c < line.length; c++) {
+          const ch = line[c];
+          if (ch === '"') {
+            inQuote = !inQuote;
+          } else if (ch === ',' && !inQuote) {
+            cols.push(buffer.trim());
+            buffer = "";
+          } else {
+            buffer += ch;
+          }
+        }
+        cols.push(buffer.trim());
+
+        if (cols.length >= 3) {
+          list.push({
+            id: cols[0] || String(i),
+            kanji: cols[1] || "",
+            ruby: cols[2].replace(/^["']|["']$/g, "").replaceAll("|", "/"),
+            difficulty: parseInt(cols[3], 10) || 1,
+            category: cols[4] || "一般",
+            source: cols[5] || "",
+            speaker: cols[6] || "",
+            sentence: cols[7] || ""
+          });
+        }
+      }
+      return list;
+    }
+
+    // イベントリスナー設定
+    function setupEvents() {
+      // 難易度スターボタン
+      document.querySelectorAll(".diff-star-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".diff-star-btn").forEach(b => b.classList.remove("selected"));
+          btn.classList.add("selected");
+          selectedDiff = parseInt(btn.dataset.lv, 10);
+          document.getElementById("input-diff").value = selectedDiff;
+          updatePreview();
+        });
+      });
+
+      // リアルタイム入力監視でプレビュー更新
+      ["input-kanji", "input-ruby", "input-category", "input-source", "input-speaker", "input-sentence"].forEach(id => {
+        document.getElementById(id).addEventListener("input", updatePreview);
+      });
+
+      // フォーム送信 (追加または更新)
+      document.getElementById("question-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        saveQuestion();
+      });
+
+      // キャンセルボタン
+      document.getElementById("btn-cancel-edit").addEventListener("click", resetForm);
+
+      // CSVエクスポート
+      document.getElementById("btn-export-csv").addEventListener("click", exportCSV);
+
+      // CSVインポート
+      document.getElementById("csv-upload").addEventListener("change", handleCSVUpload);
+
+      // 検索ボックス
+      document.getElementById("search-box").addEventListener("input", (e) => {
+        renderTable(e.target.value.trim());
+      });
+    }
+
+    // プレビューのリアルタイム更新
+    function updatePreview() {
+      const kanji = document.getElementById("input-kanji").value || "漢字";
+      const ruby = document.getElementById("input-ruby").value || "よみ";
+      const cat = document.getElementById("input-category").value || "生徒名";
+      const diff = selectedDiff;
+      const source = document.getElementById("input-source").value || "メインストーリー";
+      const speaker = document.getElementById("input-speaker").value || "アロナ";
+      const sentence = document.getElementById("input-sentence").value || `${kanji}に関するセリフがここに表示されます。`;
+
+      document.getElementById("prev-kanji").textContent = kanji;
+      document.getElementById("prev-rubies").textContent = ruby.replaceAll("/", " / ");
+      document.getElementById("prev-cat").textContent = cat;
+
+      const stars = "★".repeat(diff) + "☆".repeat(5 - diff);
+      document.getElementById("prev-diff").textContent = `Lv.${diff} ${stars}`;
+
+      document.getElementById("prev-source").textContent = source;
+      document.getElementById("prev-speaker").textContent = speaker;
+
+      // セリフ内の漢字をハイライト
+      let formatted = sentence;
+      if (kanji && kanji !== "漢字" && formatted.includes(kanji)) {
+        formatted = formatted.replaceAll(kanji, `<span class="kanji-highlight">${kanji}</span>`);
+      }
+      document.getElementById("prev-sentence").innerHTML = `「${formatted}」`;
+    }
+
+    // 問題の保存 (新規または編集更新)
+    function saveQuestion() {
+      const editId = document.getElementById("edit-id").value;
+      const kanji = document.getElementById("input-kanji").value.trim();
+      const ruby = document.getElementById("input-ruby").value.trim();
+      const cat = document.getElementById("input-category").value;
+      const diff = parseInt(document.getElementById("input-diff").value, 10);
+      const source = document.getElementById("input-source").value.trim();
+      const speaker = document.getElementById("input-speaker").value.trim();
+      const sentence = document.getElementById("input-sentence").value.trim();
+
+      if (!kanji || !ruby || !sentence) {
+        alert("漢字、よみ、セリフは必須です！");
+        return;
+      }
+
+      if (editId) {
+        // 更新
+        const target = questions.find(q => String(q.id) === String(editId));
+        if (target) {
+          target.kanji = kanji;
+          target.ruby = ruby;
+          target.category = cat;
+          target.difficulty = diff;
+          target.source = source;
+          target.speaker = speaker;
+          target.sentence = sentence;
+        }
+        showToast("問題を更新しました！");
+      } else {
+        // 新規
+        const newId = questions.length > 0 ? Math.max(...questions.map(q => parseInt(q.id, 10) || 0)) + 1 : 1;
+        questions.push({
+          id: newId,
+          kanji,
+          ruby,
+          category: cat,
+          difficulty: diff,
+          source,
+          speaker,
+          sentence
+        });
+        showToast("新しい問題を追加しました！");
+      }
+
+      resetForm();
+      renderTable();
+    }
+
+    // フォーム初期化
+    function resetForm() {
+      document.getElementById("edit-id").value = "";
+      document.getElementById("question-form").reset();
+      selectedDiff = 1;
+      document.querySelectorAll(".diff-star-btn").forEach(b => {
+        b.classList.toggle("selected", b.dataset.lv === "1");
+      });
+      document.getElementById("input-diff").value = "1";
+      document.getElementById("form-mode-title").textContent = "新しい問題を追加";
+      document.getElementById("btn-submit").textContent = "➕ この問題を追加する";
+      document.getElementById("btn-cancel-edit").style.display = "none";
+      updatePreview();
+    }
+
+    // テーブル描画
+    function renderTable(keyword = "") {
+      const tbody = document.getElementById("question-table-body");
+      tbody.innerHTML = "";
+
+      let list = questions;
+      if (keyword) {
+        const k = keyword.toLowerCase();
+        list = questions.filter(q => 
+          q.kanji.toLowerCase().includes(k) ||
+          q.ruby.toLowerCase().includes(k) ||
+          (q.speaker && q.speaker.toLowerCase().includes(k)) ||
+          (q.source && q.source.toLowerCase().includes(k))
+        );
+      }
+
+      document.getElementById("total-count").textContent = questions.length;
+
+      list.forEach((q, idx) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${q.id}</strong></td>
+          <td style="font-size:1.15rem; font-weight:900; color:#0F172A;">${escapeHtml(q.kanji)}</td>
+          <td style="color:#0284c7; font-weight:800;">${escapeHtml(q.ruby)}</td>
+          <td><span class="badge-diff">★${q.difficulty}</span></td>
+          <td><strong>${escapeHtml(q.speaker || "-")}</strong></td>
+          <td style="max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(q.sentence)}">
+            ${escapeHtml(q.sentence)}
+          </td>
+          <td>
+            <div class="action-btn-group">
+              <button class="btn-mini" onclick="editQuestion(${q.id})">編集</button>
+              <button class="btn-mini btn-delete" onclick="deleteQuestion(${q.id})">削除</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 編集モードへの切り替え
+    window.editQuestion = function(id) {
+      const q = questions.find(item => String(item.id) === String(id));
+      if (!q) return;
+
+      document.getElementById("edit-id").value = q.id;
+      document.getElementById("input-kanji").value = q.kanji;
+      document.getElementById("input-ruby").value = q.ruby;
+      document.getElementById("input-category").value = q.category;
+      document.getElementById("input-source").value = q.source;
+      document.getElementById("input-speaker").value = q.speaker;
+      document.getElementById("input-sentence").value = q.sentence;
+
+      selectedDiff = q.difficulty || 1;
+      document.getElementById("input-diff").value = selectedDiff;
+      document.querySelectorAll(".diff-star-btn").forEach(b => {
+        b.classList.toggle("selected", parseInt(b.dataset.lv, 10) === selectedDiff);
+      });
+
+      document.getElementById("form-mode-title").textContent = `問題 ID:${q.id} を編集中`;
+      document.getElementById("btn-submit").textContent = "💾 変更を保存する";
+      document.getElementById("btn-cancel-edit").style.display = "inline-flex";
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      updatePreview();
+    };
+
+    // 削除
+    window.deleteQuestion = function(id) {
+      const q = questions.find(item => String(item.id) === String(id));
+      if (!q) return;
+      if (confirm(`「${q.kanji}」を一覧から削除してもよろしいですか？`)) {
+        questions = questions.filter(item => String(item.id) !== String(id));
+        renderTable();
+        showToast("問題を削除しました");
+      }
+    };
+
+    // CSVエクスポート・ダウンロード
+    function exportCSV() {
+      if (questions.length === 0) {
+        alert("エクスポートする問題データがありません。");
+        return;
+      }
+
+      // ヘッダー
+      let csvContent = "id,kanji,ruby,difficulty,category,source,speaker,sentence\n";
+
+      questions.forEach((q, i) => {
+        const id = q.id || (i + 1);
+        const kanji = escapeCSV(q.kanji);
+        // パイプ区切りまたはスラッシュ区切りをそのまま保持
+        const ruby = escapeCSV(q.ruby);
+        const diff = q.difficulty || 1;
+        const cat = escapeCSV(q.category || "一般");
+        const source = escapeCSV(q.source || "");
+        const speaker = escapeCSV(q.speaker || "");
+        const sentence = escapeCSV(q.sentence || "");
+
+        csvContent += `${id},${kanji},${ruby},${diff},${cat},${source},${speaker},${sentence}\n`;
+      });
+
+      // ダウンロード実行 (UTF-8 BOM付きでExcelやMacでも文字化け防止)
+      const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+      const blob = new Blob([bom, csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "questions.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast("questions.csv をダウンロードしました！");
+    }
+
+    // CSVアップロード
+    function handleCSVUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const text = evt.target.result;
+        const parsed = parseCSV(text);
+        if (parsed.length > 0) {
+          questions = parsed;
+          renderTable();
+          resetForm();
+          showToast(`${parsed.length}件の問題を読み込みました！`);
+        } else {
+          alert("CSVに有効な問題データが見つかりませんでした。");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function escapeCSV(text) {
+      if (text === undefined || text === null) return "";
+      const str = String(text);
+      if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+        return `"${str.replaceAll('"', '""')}"`;
+      }
+      return str;
+    }
+
+    function escapeHtml(text) {
+      return String(text || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2500);
+    }
+  </script>
+</body>
+</html>

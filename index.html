@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ブルーアーカイブ漢字クイズ</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>ブルーアーカイブ漢字検定</title>
   <meta name="description" content="ブルーアーカイブ（ブルアカ）に登場する漢字の読み仮名を当てるブラウザクイズゲーム！">
-  <link rel="stylesheet" href="style.css?v=15">
+  <link rel="stylesheet" href="style.css?v=25">
 </head>
 <body>
   <!-- 背景サイバー装飾 -->
@@ -15,7 +18,7 @@
   <header>
     <div class="schale-logo">
       <span class="logo-badge">SCHALE</span>
-      <span class="app-title-text">ブルアカ漢字クイズ</span>
+      <span class="app-title-text">ブルアカ漢字検定</span>
     </div>
     <div class="header-controls">
       <button id="btn-mute" class="icon-btn" title="ミュート切替">🔊</button>
@@ -28,7 +31,7 @@
       <div class="accent-stripe"></div>
       
       <div class="title-hero-wrap">
-        <h1 class="game-main-title">ブルアカ漢字クイズ</h1>
+        <h1 class="game-main-title">ブルアカ漢字検定</h1>
         <div class="game-sub-title">BLUE ARCHIVE KANJI QUIZ</div>
       </div>
 
@@ -78,6 +81,14 @@
       <button id="btn-start" class="start-btn">
         <span>START</span>
       </button>
+
+      <!-- インフォメーションボタン (README / アップデート / クレジット) -->
+      <div class="title-info-links">
+        <button id="btn-open-info" class="btn-info-link">
+          <span class="icon">📜</span>
+          <span>お知らせ・遊び方・クレジット</span>
+        </button>
+      </div>
 
       <p class="disclaimer-note">
         ※本作は『ブルーアーカイブ』の非公式二次創作ファンメイドゲームです。
@@ -159,15 +170,19 @@
       <div class="result-stats-card">
         <div class="stat-item">
           <span class="stat-label">TOTAL SCORE</span>
-          <span id="res-score" class="stat-value">12,500</span>
+          <span id="res-score" class="stat-value">0</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">CORRECT</span>
-          <span id="res-correct" class="stat-value">10 / 10</span>
+          <span id="res-correct" class="stat-value">0 / 0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">AVG TIME</span>
+          <span id="res-avg-time" class="stat-value">0.000s</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">MAX COMBO</span>
-          <span id="res-combo" class="stat-value">10</span>
+          <span id="res-combo" class="stat-value">0</span>
         </div>
       </div>
 
@@ -183,10 +198,62 @@
         <button id="btn-home" class="btn-action" style="background:#E2E8F0; color:#334155;"> タイトルへ</button>
       </div>
     </div>
+
+    <!-- ================= タイトルへ戻る確認モーダル ================= -->
+    <div id="modal-confirm" class="modal-backdrop" style="display: none;">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <span class="modal-badge">CONFIRMATION</span>
+          <h3 class="modal-title">タイトル画面に戻りますか？</h3>
+        </div>
+        <p class="modal-body">
+          現在のミッション進行状況および獲得スコアは破棄されます。よろしいですか？
+        </p>
+        <div class="modal-actions">
+          <button id="modal-btn-cancel" class="btn-modal btn-modal-cancel">ゲームを続ける</button>
+          <button id="modal-btn-confirm" class="btn-modal btn-modal-confirm">タイトルへ戻る</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= インフォメーションモーダル (README / アップデート / クレジット) ================= -->
+    <div id="modal-info" class="modal-backdrop" style="display: none;">
+      <div class="modal-dialog info-modal-dialog">
+        <div class="info-modal-header">
+          <div class="schale-tab-group">
+            <button class="schale-tab active" data-tab="tab-updates">📢 アップデート情報</button>
+            <button class="schale-tab" data-tab="tab-readme">📖 遊び方 (README)</button>
+            <button class="schale-tab" data-tab="tab-credits">🎨 クレジット・規約</button>
+          </div>
+          <button id="btn-close-info" class="btn-close-round" title="閉じる">✕</button>
+        </div>
+
+        <div class="info-modal-content">
+          <!-- タブ1: アップデート情報 -->
+          <div id="tab-updates" class="info-tab-pane active">
+            <pre id="txt-content-updates" class="info-txt-view">読み込み中...</pre>
+          </div>
+
+          <!-- タブ2: 遊び方 (README) -->
+          <div id="tab-readme" class="info-tab-pane">
+            <pre id="txt-content-readme" class="info-txt-view">読み込み中...</pre>
+          </div>
+
+          <!-- タブ3: クレジット・規約 -->
+          <div id="tab-credits" class="info-tab-pane">
+            <pre id="txt-content-credits" class="info-txt-view">読み込み中...</pre>
+          </div>
+        </div>
+
+        <div class="info-modal-footer">
+          <button id="btn-close-info-bottom" class="btn-modal-cancel" style="padding: 10px 28px; border-radius: 10px; font-weight: 800; cursor: pointer; border: none;">閉じる</button>
+        </div>
+      </div>
+    </div>
   </main>
 
-  <script src="romaji.js?v=14"></script>
-  <script src="audio.js?v=14"></script>
-  <script src="game.js?v=14"></script>
+  <script src="romaji.js?v=25"></script>
+  <script src="audio.js?v=25"></script>
+  <script src="game.js?v=25"></script>
 </body>
 </html>
