@@ -288,6 +288,9 @@ class KanjiGoGame {
     // フォーカス
     this.elInput.focus();
 
+    // 出題開始時刻を記録
+    this.questionStartTime = Date.now();
+
     // タイマー開始
     this.startTimer();
   }
@@ -336,13 +339,17 @@ class KanjiGoGame {
       const pts = basePts + timeBonus + comboBonus;
       this.score += pts;
 
+      const elapsedSec = ((Date.now() - this.questionStartTime) / 1000).toFixed(1);
+
       this.history.push({
         kanji: q.kanji,
         rubies: q.rubies,
         isCorrect: true,
         user: inputHiragana,
         source: q.source,
-        speaker: q.speaker
+        speaker: q.speaker,
+        sentence: q.sentence,
+        timeSec: elapsedSec
       });
 
       // 演出
@@ -376,13 +383,16 @@ class KanjiGoGame {
     window.soundManager.playWrong();
 
     const q = this.currentQuestions[this.currentIndex - 1];
+    const elapsedSec = (this.timeLimitMs / 1000).toFixed(1);
     this.history.push({
       kanji: q.kanji,
       rubies: q.rubies,
       isCorrect: false,
       user: this.elReadingPreview.textContent || "無回答",
       source: q.source,
-      speaker: q.speaker
+      speaker: q.speaker,
+      sentence: q.sentence,
+      timeSec: elapsedSec
     });
 
     // 画面揺れとミス演出
@@ -447,8 +457,11 @@ class KanjiGoGame {
           ${metaInfo ? `<span class="review-source">${metaInfo}</span>` : ""}
           ${item.sentence ? `<div class="review-sentence" style="font-size:0.8rem; color:#64748b; margin-top:3px; line-height:1.4;">「${item.sentence}」</div>` : ""}
         </div>
-        <div class="review-right" style="color: ${item.isCorrect ? '#0284c7' : '#ef4444'}">
-          ${item.user || "-"}
+        <div class="review-right">
+          <span class="review-user-ans" style="color: ${item.isCorrect ? '#0284c7' : '#ef4444'}">
+            ${item.user || "-"}
+          </span>
+          <span class="review-time">⏱️ ${item.timeSec}s</span>
         </div>
       `;
       reviewList.appendChild(div);
